@@ -16,7 +16,7 @@
     <mat-tab label="Advanced">
 
       <courses-card-list
-          [courses]="advancedCourses"
+          [courses]="advancedCourses$ | async"
 
       ></courses-card-list>
 

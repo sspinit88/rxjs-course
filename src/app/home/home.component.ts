@@ -15,7 +15,7 @@ export class HomeComponent implements OnInit {
 
   beginnerCourses$: Observable<Course[]>;
 
-  advancedCourses: Course[];
+  advancedCourses$: Observable<Course[]>;
 
 
   constructor(private store: Store) {
@@ -23,25 +23,26 @@ export class HomeComponent implements OnInit {
   }
 
   ngOnInit() {
-    const http$: Observable<Course[]> = createHttpObservable('http://localhost:3000/api/courses');
-
-    const courses$: Observable<Course[]> = http$
+    const http$: Observable<Course[]> = createHttpObservable('http://localhost:3000/api/courses')
       .pipe(
+        // todo  tap() - используется для выполнения какого-либо действия при генерации объектом Observable нового значения.
+        tap(() => console.log('File: home.component.ts, Line - 30, ', 0)),
         map(res => Object.values(res.payload)),
+        // todo  передает новым обработчикам заданное количество последних значений объекта.
+        shareReplay(),
       );
 
-    this.beginnerCourses$ = courses$
+    this.beginnerCourses$ = http$
       .pipe(
         map(res => res
           .filter(course => course.category === 'BEGINNER')),
       );
 
-    courses$.subscribe(res => {
-      // this.beginnerCourses$ = res.filter(res.filter(course => course.category === 'BEGINNER'));
-      this.advancedCourses = res.filter(course => course.category === 'ADVANCED');
-    });
-
-
+    this.advancedCourses$ = http$
+      .pipe(
+        map(res => res
+          .filter(course => course.category === 'ADVANCED')),
+      );
   }
 
 }
