@@ -28,7 +28,7 @@ export class HomeComponent implements OnInit {
     const http$: Observable<any> = createHttpObservable('http://localhost:9000/api/courses')
       .pipe(
         // todo  tap() - используется для выполнения какого-либо действия при генерации объектом Observable нового значения.
-        tap(() => console.log('File: home.component.ts, Line - 30, ', 0)),
+        // tap(() => console.log('File: home.component.ts, Line - 30, ', 0)),
         map(res => Object.values(res['payload'])),
         // todo  передает новым обработчикам заданное количество последних значений объекта.
         shareReplay(),

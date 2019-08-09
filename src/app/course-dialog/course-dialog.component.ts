@@ -1,63 +1,82 @@
-import {AfterViewInit, Component, ElementRef, Inject, OnInit, ViewChild, ViewEncapsulation} from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef } from "@angular/material/dialog";
-import {Course} from "../model/course";
-import {FormBuilder, Validators, FormGroup} from "@angular/forms";
+import { AfterViewInit, Component, ElementRef, Inject, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { Course } from '../model/course';
+import { FormBuilder, Validators, FormGroup } from '@angular/forms';
 import * as moment from 'moment';
-import {fromEvent, noop} from 'rxjs';
-import {concatMap, distinctUntilChanged, exhaustMap, filter, mergeMap, tap} from 'rxjs/operators';
-import {fromPromise} from 'rxjs/internal-compatibility';
-import {Store} from '../common/store.service';
+import { fromEvent, noop } from 'rxjs';
+import { concatMap, distinctUntilChanged, exhaustMap, filter, mergeMap, tap } from 'rxjs/operators';
+import { fromPromise } from 'rxjs/internal-compatibility';
+import { Store } from '../common/store.service';
 
 @Component({
-    selector: 'course-dialog',
-    templateUrl: './course-dialog.component.html',
-    styleUrls: ['./course-dialog.component.css']
+  selector: 'course-dialog',
+  templateUrl: './course-dialog.component.html',
+  styleUrls: ['./course-dialog.component.css']
 })
-export class CourseDialogComponent implements AfterViewInit {
+export class CourseDialogComponent implements OnInit, AfterViewInit {
 
-    form: FormGroup;
+  form: FormGroup;
 
-    course:Course;
+  course: Course;
 
-    @ViewChild('saveButton', { static: true }) saveButton: ElementRef;
+  @ViewChild('saveButton', { static: true }) saveButton: ElementRef;
 
-    @ViewChild('searchInput', { static: true }) searchInput : ElementRef;
+  @ViewChild('searchInput', { static: true }) searchInput: ElementRef;
 
-    constructor(
-        private fb: FormBuilder,
-        private dialogRef: MatDialogRef<CourseDialogComponent>,
-        @Inject(MAT_DIALOG_DATA) course:Course,
-        private store:Store) {
+  constructor(
+    private fb: FormBuilder,
+    private dialogRef: MatDialogRef<CourseDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) course: Course,
+    private store: Store) {
 
-        this.course = course;
+    this.course = course;
 
-        this.form = fb.group({
-            description: [course.description, Validators.required],
-            category: [course.category, Validators.required],
-            releasedAt: [moment(), Validators.required],
-            longDescription: [course.longDescription,Validators.required]
-        });
+    this.form = fb.group({
+      description: [course.description, Validators.required],
+      category: [course.category, Validators.required],
+      releasedAt: [moment(), Validators.required],
+      longDescription: [course.longDescription, Validators.required]
+    });
 
-    }
+  }
 
-    ngAfterViewInit() {
+  ngOnInit(): void {
+    this.form.valueChanges
+      .pipe(
+        filter(() => this.form.value),
+        // todo concatMap() - применяется, когда есть Observable, элементы последовательности которого тоже Observable, а вам хочется
+        //  объединить все в один поток (чтобы все элементы внутренние Observable порождали событие основного)
+        concatMap(changes => this.saveCurse(changes)),
+      )
+      .subscribe(res => console.log('File: course-dialog.component.ts, Line - 49, res:', res));
+  }
 
-    }
+  ngAfterViewInit() {
 
-    save() {
-        this.store.saveCourse(this.course.id, this.form.value)
-            .subscribe(
-                () => this.close(),
-                err => console.log("Error saving course", err)
-            );
-    }
+  }
+
+  save() {
+    this.store.saveCourse(this.course.id, this.form.value)
+      .subscribe(
+        () => this.close(),
+        err => console.log('Error saving course', err)
+      );
+  }
 
 
+  close() {
+    this.dialogRef.close();
+  }
 
-
-    close() {
-        this.dialogRef.close();
-    }
+  saveCurse(changes) {
+    return fromPromise(fetch(`/api/courses/${this.course.id}`, {
+      method: 'PUT',
+      body: JSON.stringify(changes),
+      headers: {
+        'content-type': 'application/json'
+      }
+    }));
+  }
 
 
 }
