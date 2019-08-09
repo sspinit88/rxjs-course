@@ -13,9 +13,9 @@ import {fromPromise} from 'rxjs/internal-compatibility';
 
 export class Store {
 
-    private subject = new BehaviorSubject<Course[]>([]);
+    private subject = new BehaviorSubject<any>([]);
 
-    courses$: Observable<Course[]> = this.subject.asObservable();
+    courses$: Observable<any> = this.subject.asObservable();
 
 
     init() {
@@ -28,7 +28,7 @@ export class Store {
                 map(res => Object.values(res['payload']))
             )
             .subscribe(
-                courses => this.subject.next(courses)
+                courses => this.subject.next(courses),
             );
     }
 

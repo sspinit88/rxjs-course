@@ -1,38 +1,21 @@
-import {Observable} from 'rxjs';
+import { Observable } from 'rxjs';
 
+// todo создаем поток из данных, которые получаем с сервера (c fetch);
+export function createHttpObservable(url): Observable<any> {
+  return new Observable(observer => {
+    fetch(url)
+      .then(response => {
+        return response.json();
+      })
+      .then(body => {
+        observer.next(body);
+        observer.complete();
+      })
+      .catch(error => {
+        observer.error(error);
+      });
+  });
 
-export function createHttpObservable(url:string) {
-    return Observable.create(observer => {
-
-        const controller = new AbortController();
-        const signal = controller.signal;
-
-        fetch(url, {signal})
-            .then(response => {
-
-                if (response.ok) {
-                    return response.json();
-                }
-                else {
-                    observer.error('Request failed with status code: ' + response.status);
-                }
-            })
-            .then(body => {
-
-                observer.next(body);
-
-                observer.complete();
-
-            })
-            .catch(err => {
-
-                observer.error(err);
-
-            });
-
-        return () => controller.abort()
-
-
-    });
 }
+
 
